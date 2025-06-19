@@ -82,7 +82,7 @@ def display_header():
     st.markdown("""
     <div style="background: #fff; color: #222; padding: 1.2rem 1rem 1rem 1rem; border-radius: 10px; margin-bottom: 2rem; border: 1px solid #e0e0e0;">
         <h3 style="margin: 0; color: #222; font-weight: 700; letter-spacing: -1px;">PwC News Intelligence</h3>
-        <p style="margin: 0.5rem 0 0 0; color: #444; font-size: 1.05rem;">AI를 통해 뉴스 PDF를 체계적으로 분석하고 요약합니다</p>
+        <p style="margin: 0.5rem 0 0 0; color: #444; font-size: 1.05rem;">AI를 통해 뉴스 PDF를 체계적으로 분석하고 요약합니다. 프롬프트는 "프롬프트 커스터마이징"에서 확인해주세요.</p>
     </div>
     """, unsafe_allow_html=True)
 
