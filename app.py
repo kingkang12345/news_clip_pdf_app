@@ -19,7 +19,8 @@ from news_summarizer import NewsArticleSummarizer
 from html_formatter import HTMLFormatter
 from model_config import model_config
 from llm_factory import LLMFactory
-
+from dotenv import load_dotenv
+load_dotenv()
 
 # 사용자 정의 CSS
 st.markdown("""
