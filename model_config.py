@@ -8,17 +8,16 @@ class ModelConfig:
         self.config = {
             'api_key': os.getenv('api_key', 'your-api-key'),
             'base_url': os.getenv('api_base', 'https://api.openai.com/v1'),
-            'pwc_model': {
-                "openai": "azure.gpt-4o",
-                "claude": "bedrock.anthropic.claude3-sonnet",
-                "claude3_5": "bedrock.anthropic.claude-3-5-sonnet",
-                "google": "vertex_ai.gemini-1.5-pro",
-                "openai_o1": "openai.o1-2024-12-17",
-                "openai_o1-mini": "azure.o1-mini",
-                "claude3_5_v2": "bedrock.anthropic.claude-3-5-sonnet-v2",
-                "openai_o3_mini": "openai.o3-mini-2025-01-31",
-                "gemini_2.0_flash": "vertex_ai.gemini-2.0-flash",
-                "claude3_7": "bedrock.anthropic.claude-3-7-sonnet-v1",
+            "pwc_model": {
+                "openai_gpt4o": "openai.gpt-4o",  # OpenAI 최신, 최고 품질
+                "azure_gpt4o": "azure.gpt-4o",    # Azure용 GPT-4o
+                "openai_gpt4_1": "openai.gpt-4.1",  # OpenAI GPT-4.1
+                "azure_gpt4_turbo": "azure.gpt-4-turbo-2024-04-09",  # Azure GPT-4 Turbo
+                "claude3_5_sonnet": "bedrock.anthropic.claude-3-5-sonnet",  # Anthropic Claude 3.5 Sonnet
+                "claude3_5_haiku": "bedrock.anthropic.claude-3-5-haiku",    # Anthropic Claude 3.5 Haiku (빠르고 저렴)
+                "gemini_1_5_pro": "vertex_ai.gemini-1.5-pro",  # Google Gemini 1.5 Pro
+                "gemini_2_0_flash": "vertex_ai.gemini-2.0-flash",  # Google Gemini 2.0 Flash
+                "claude3_7_sonnet": "bedrock.anthropic.claude-3-7-sonnet-v1", # Anthropic Claude 3.7 Sonnet
                 "openai_ai": "gpt-4o"
             }
         }
@@ -44,17 +43,16 @@ class ModelConfig:
         model_mapping = self.config.get('pwc_model', {})
         
         model_descriptions = {
-            "openai": "OpenAI GPT-4o (추천)",
-            "claude": "Anthropic Claude 3 Sonnet",
-            "claude3_5": "Anthropic Claude 3.5 Sonnet",
-            "google": "Google Gemini 1.5 Pro",
-            "openai_o1": "OpenAI o1 (고급 추론)",
-            "openai_o1-mini": "OpenAI o1-mini (빠른 추론)",
-            "claude3_5_v2": "Claude 3.5 Sonnet v2",
-            "openai_o3_mini": "OpenAI o3-mini (최신)",
-            "gemini_2.0_flash": "Gemini 2.0 Flash",
-            "claude3_7": "Claude 3.7 Sonnet",
-            "openai_ai": "gpt-4o"
+            "openai_gpt4o": "OpenAI GPT-4o (최신, 최고 품질, 추천)",
+            "azure_gpt4o": "Azure GPT-4o (Azure용, 최고 품질)",
+            "openai_gpt4_1": "OpenAI GPT-4.1 (긴 입력, 안정적)",
+            "azure_gpt4_turbo": "Azure GPT-4 Turbo (긴 입력, 비용 효율)",
+            "claude3_5_sonnet": "Anthropic Claude 3.5 Sonnet (긴 문서 요약 특화)",
+            "claude3_5_haiku": "Anthropic Claude 3.5 Haiku (빠르고 저렴)",
+            "gemini_1_5_pro": "Google Gemini 1.5 Pro (멀티모달, 긴 문서)",
+            "gemini_2_0_flash": "Google Gemini 2.0 Flash (빠른 처리)",
+            "claude3_7_sonnet": "Anthropic Claude 3.7 Sonnet (최신, 고성능)",
+            "openai_ai": "OpenAI GPT-4o (최신, 최고 품질, 추천)"
         }
         
         return {k: v for k, v in model_descriptions.items() if k in model_mapping}
