@@ -4,10 +4,10 @@
 
 name: Build and deploy Python app to Azure Web App - AEZTOAIYADWA003
 
-#on:
-#  push:
-#    branches:
-#      - main
+on:
+  push:
+    branches:
+      - main
   workflow_dispatch:
 
 jobs:
@@ -68,4 +68,4 @@ jobs:
         with:
           app-name: 'AEZTOAIYADWA003'
           slot-name: 'Production'
-          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_F9EED9FABFF547B3B6C47BA2C95061CF }}
+          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_47DE5F857EE44D3BB80D0ED0AFD3261D }}
