@@ -1,4 +1,12 @@
 import streamlit as st
+
+# 페이지 설정
+st.set_page_config(
+    page_title="PDF AI 요약",
+    page_icon="📰",
+    layout="wide",
+    initial_sidebar_state="expanded"
+)
 import tempfile
 import os
 import json
@@ -12,13 +20,6 @@ from html_formatter import HTMLFormatter
 from model_config import model_config
 from llm_factory import LLMFactory
 
-# 페이지 설정
-st.set_page_config(
-    page_title="PDF AI 요약",
-    page_icon="📰",
-    layout="wide",
-    initial_sidebar_state="expanded"
-)
 
 # 사용자 정의 CSS
 st.markdown("""
