@@ -1,8 +1,15 @@
 import yaml
 import os
-from typing import Dict, Optional
+from typing import Dict, Optional, Any
 import logging
 from pathlib import Path
+
+# Streamlit secrets 지원
+try:
+    import streamlit as st
+    STREAMLIT_AVAILABLE = True
+except ImportError:
+    STREAMLIT_AVAILABLE = False
 
 class ModelConfig:
     def __init__(self, config_path: str = "config.yaml"):
@@ -10,15 +17,67 @@ class ModelConfig:
         self.config = self._load_config()
         
     def _load_config(self) -> Dict:
-        """config.yaml에서 설정 로드"""
+        """config.yaml에서 설정 로드 (환경변수/Secrets 우선)"""
         try:
-            with open(self.config_path, 'r', encoding='utf-8') as f:
-                config = yaml.safe_load(f)
-            logging.info("설정 파일 로드 완료")
+            # 1. config.yaml에서 기본 설정 로드
+            if self.config_path.exists():
+                with open(self.config_path, 'r', encoding='utf-8') as f:
+                    config = yaml.safe_load(f)
+            else:
+                config = self._get_default_config()
+            
+            # 2. 환경변수로 오버라이드
+            config = self._override_with_env_vars(config)
+            
+            # 3. Streamlit secrets로 오버라이드 (최고 우선순위)
+            config = self._override_with_streamlit_secrets(config)
+            
+            logging.info("설정 파일 로드 완료 (환경변수/Secrets 적용)")
             return config
+            
         except Exception as e:
             logging.error(f"설정 파일 로드 실패: {e}")
             return self._get_default_config()
+    
+    def _override_with_env_vars(self, config: Dict) -> Dict:
+        """환경변수로 설정 오버라이드"""
+        # API 키
+        if os.getenv('API_KEY'):
+            config['api_key'] = os.getenv('API_KEY')
+        if os.getenv('OPENAI_API_KEY'):  # 일반적인 환경변수명도 지원
+            config['api_key'] = os.getenv('OPENAI_API_KEY')
+            
+        # Base URL
+        if os.getenv('BASE_URL'):
+            config['base_url'] = os.getenv('BASE_URL')
+        if os.getenv('OPENAI_BASE_URL'):
+            config['base_url'] = os.getenv('OPENAI_BASE_URL')
+        if os.getenv('API_BASE'):
+            config['api_base'] = os.getenv('API_BASE')
+            
+        return config
+    
+    def _override_with_streamlit_secrets(self, config: Dict) -> Dict:
+        """Streamlit secrets로 설정 오버라이드"""
+        if not STREAMLIT_AVAILABLE:
+            return config
+            
+        try:
+            # API 키
+            if hasattr(st, 'secrets') and 'general' in st.secrets:
+                if 'API_KEY' in st.secrets.general:
+                    config['api_key'] = st.secrets.general['API_KEY']
+                if 'BASE_URL' in st.secrets.general:
+                    config['base_url'] = st.secrets.general['BASE_URL']
+                    
+            # 모델 설정
+            if hasattr(st, 'secrets') and 'pwc_model' in st.secrets:
+                config['pwc_model'] = dict(st.secrets.pwc_model)
+                
+        except Exception as e:
+            logging.warning(f"Streamlit secrets 읽기 실패: {e}")
+            
+        return config
     
     def _get_default_config(self) -> Dict:
         """기본 설정"""
@@ -55,6 +114,7 @@ class ModelConfig:
         
         model_descriptions = {
             "openai": "OpenAI GPT-4o (추천)",
+            "claude": "Anthropic Claude 3 Sonnet",
             "claude3_5": "Anthropic Claude 3.5 Sonnet",
             "google": "Google Gemini 1.5 Pro",
             "openai_o1": "OpenAI o1 (고급 추론)",
@@ -72,6 +132,21 @@ class ModelConfig:
         return {
             'api_key': self.get_api_key(),
             'base_url': self.get_base_url()
+        }
+
+    def debug_model_config(self) -> Dict[str, Any]:
+        """디버깅용: 모델 설정 상태 확인"""
+        model_mapping = self.config.get('pwc_model', {})
+        available_models = self.get_available_models()
+        
+        return {
+            'config_loaded': bool(self.config),
+            'config_path_exists': self.config_path.exists(),
+            'total_models_in_config': len(model_mapping),
+            'models_in_config': list(model_mapping.keys()),
+            'available_models_count': len(available_models),
+            'available_models': list(available_models.keys()),
+            'available_models_with_descriptions': available_models
         }
 
 # 전역 설정 인스턴스
