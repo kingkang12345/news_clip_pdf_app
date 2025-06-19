@@ -19,6 +19,15 @@ class LLMFactory:
             # OpenAI 호환 설정
             openai_config = model_config.get_openai_config()
             
+            # ChatOpenAI에서 지원하지 않는 인자들 필터링
+            supported_kwargs = {}
+            unsupported_args = {'proxies', 'proxy', 'verify_ssl', 'ssl_verify'}
+            for key, value in kwargs.items():
+                if key not in unsupported_args:
+                    supported_kwargs[key] = value
+                else:
+                    logging.warning(f"지원하지 않는 인자 제거됨: {key}")
+            
             # ChatOpenAI 인스턴스 생성 (통합 API 사용)
             llm = ChatOpenAI(
                 model=actual_model,
@@ -26,7 +35,7 @@ class LLMFactory:
                 streaming=streaming,
                 api_key=openai_config['api_key'],
                 base_url=openai_config['base_url'],
-                **kwargs
+                **supported_kwargs
             )
             
             logging.info(f"LLM 생성 완료: {user_model} -> {actual_model}")
@@ -44,13 +53,22 @@ class LLMFactory:
         
         openai_config = model_config.get_openai_config()
         
+        # ChatOpenAI에서 지원하지 않는 인자들 필터링
+        supported_kwargs = {}
+        unsupported_args = {'proxies', 'proxy', 'verify_ssl', 'ssl_verify'}
+        for key, value in kwargs.items():
+            if key not in unsupported_args:
+                supported_kwargs[key] = value
+            else:
+                logging.warning(f"폴백 모델에서 지원하지 않는 인자 제거됨: {key}")
+        
         return ChatOpenAI(
             model="azure.gpt-4o",
             temperature=temperature,
             streaming=streaming,
             api_key=openai_config['api_key'],
             base_url=openai_config['base_url'],
-            **kwargs
+            **supported_kwargs
         )
     
     @staticmethod
