@@ -19,23 +19,35 @@ class LLMFactory:
             # OpenAI 호환 설정
             openai_config = model_config.get_openai_config()
             
-            # ChatOpenAI에서 지원하지 않는 인자들 필터링
+            # 디버깅: 전달된 kwargs 확인
+            if kwargs:
+                logging.info(f"create_llm에 전달된 kwargs: {kwargs}")
+            
+            # ChatOpenAI에서 지원하지 않는 인자들 완전히 제거
+            # 지원되는 인자만 명시적으로 허용
+            allowed_args = {
+                'timeout', 'max_retries', 'default_headers', 'default_query',
+                'http_client', 'request_timeout', 'max_tokens', 'top_p',
+                'frequency_penalty', 'presence_penalty', 'logit_bias',
+                'user', 'response_format', 'seed', 'tools', 'tool_choice',
+                'parallel_tool_calls', 'stop', 'stream_options'
+            }
+            
             supported_kwargs = {}
-            unsupported_args = {'proxies', 'proxy', 'verify_ssl', 'ssl_verify'}
             for key, value in kwargs.items():
-                if key not in unsupported_args:
+                if key in allowed_args:
                     supported_kwargs[key] = value
                 else:
-                    logging.warning(f"지원하지 않는 인자 제거됨: {key}")
+                    logging.warning(f"지원하지 않는 인자 제거됨: {key}={value}")
             
-            # ChatOpenAI 인스턴스 생성 (통합 API 사용)
+            # ChatOpenAI 인스턴스 생성 (통합 API 사용) - kwargs 없이 안전하게
             llm = ChatOpenAI(
                 model=actual_model,
                 temperature=temperature,
                 streaming=streaming,
                 api_key=openai_config['api_key'],
-                base_url=openai_config['base_url'],
-                **supported_kwargs
+                base_url=openai_config['base_url']
+                # kwargs는 의도적으로 제거 - proxies 에러 방지
             )
             
             logging.info(f"LLM 생성 완료: {user_model} -> {actual_model}")
@@ -43,32 +55,23 @@ class LLMFactory:
             
         except Exception as e:
             logging.error(f"LLM 생성 실패: {e}")
-            # 폴백으로 기본 OpenAI 모델 사용
-            return LLMFactory._create_fallback_llm(temperature, streaming, **kwargs)
+            # 폴백으로 기본 OpenAI 모델 사용 (kwargs 없이)
+            return LLMFactory._create_fallback_llm(temperature, streaming)
     
     @staticmethod
-    def _create_fallback_llm(temperature: float, streaming: bool, **kwargs) -> ChatOpenAI:
-        """폴백 LLM 생성"""
-        logging.warning("폴백 모델 사용: azure.gpt-4o")
+    def _create_fallback_llm(temperature: float, streaming: bool) -> ChatOpenAI:
+        """폴백 LLM 생성 - kwargs 없이 안전하게"""
+        logging.warning("폴백 모델 사용: gpt-4o-mini")
         
         openai_config = model_config.get_openai_config()
         
-        # ChatOpenAI에서 지원하지 않는 인자들 필터링
-        supported_kwargs = {}
-        unsupported_args = {'proxies', 'proxy', 'verify_ssl', 'ssl_verify'}
-        for key, value in kwargs.items():
-            if key not in unsupported_args:
-                supported_kwargs[key] = value
-            else:
-                logging.warning(f"폴백 모델에서 지원하지 않는 인자 제거됨: {key}")
-        
         return ChatOpenAI(
-            model="azure.gpt-4o",
+            model="gpt-4o-mini",
             temperature=temperature,
             streaming=streaming,
             api_key=openai_config['api_key'],
-            base_url=openai_config['base_url'],
-            **supported_kwargs
+            base_url=openai_config['base_url']
+            # kwargs 완전히 제거 - proxies 에러 방지
         )
     
     @staticmethod
