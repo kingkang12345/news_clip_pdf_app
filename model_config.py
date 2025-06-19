@@ -19,7 +19,7 @@ class ModelConfig:
                 "openai_o3_mini": "openai.o3-mini-2025-01-31",
                 "gemini_2.0_flash": "vertex_ai.gemini-2.0-flash",
                 "claude3_7": "bedrock.anthropic.claude-3-7-sonnet-v1",
-                "openai_ai": "gpt-4o-mini"
+                "openai_ai": "gpt-4o"
             }
         }
         logging.info("모델 설정 로드 완료 (하드코딩)")
@@ -54,7 +54,7 @@ class ModelConfig:
             "openai_o3_mini": "OpenAI o3-mini (최신)",
             "gemini_2.0_flash": "Gemini 2.0 Flash",
             "claude3_7": "Claude 3.7 Sonnet",
-            "openai_ai": "gpt-4o-mini"
+            "openai_ai": "gpt-4o"
         }
         
         return {k: v for k, v in model_descriptions.items() if k in model_mapping}
