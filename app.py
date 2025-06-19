@@ -235,6 +235,11 @@ def setup_sidebar():
             </div>
             """, unsafe_allow_html=True)
     
+    # 디버깅 정보 표시
+    if st.sidebar.button("🐛 모델 설정 디버깅"):
+        debug_info = model_config.debug_model_config()
+        st.sidebar.json(debug_info)
+    
     # 연결 테스트
     if st.sidebar.button("🔗 연결 테스트"):
         with st.sidebar:

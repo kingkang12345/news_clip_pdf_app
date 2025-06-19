@@ -4,20 +4,13 @@ from typing import Dict, Optional, Any
 import logging
 from pathlib import Path
 
-# Streamlit secrets 지원
-try:
-    import streamlit as st
-    STREAMLIT_AVAILABLE = True
-except ImportError:
-    STREAMLIT_AVAILABLE = False
-
 class ModelConfig:
     def __init__(self, config_path: str = "config.yaml"):
         self.config_path = Path(__file__).parent / config_path
         self.config = self._load_config()
         
     def _load_config(self) -> Dict:
-        """config.yaml에서 설정 로드 (환경변수/Secrets 우선)"""
+        """config.yaml에서 설정 로드 (환경변수 우선)"""
         try:
             # 1. config.yaml에서 기본 설정 로드
             if self.config_path.exists():
@@ -29,10 +22,7 @@ class ModelConfig:
             # 2. 환경변수로 오버라이드
             config = self._override_with_env_vars(config)
             
-            # 3. Streamlit secrets로 오버라이드 (최고 우선순위)
-            config = self._override_with_streamlit_secrets(config)
-            
-            logging.info("설정 파일 로드 완료 (환경변수/Secrets 적용)")
+            logging.info("설정 파일 로드 완료 (환경변수 적용)")
             return config
             
         except Exception as e:
@@ -40,42 +30,24 @@ class ModelConfig:
             return self._get_default_config()
     
     def _override_with_env_vars(self, config: Dict) -> Dict:
-        """환경변수로 설정 오버라이드"""
+        """환경변수로 설정 오버라이드 (Azure 환경변수만)"""
         # API 키
-        if os.getenv('API_KEY'):
-            config['api_key'] = os.getenv('API_KEY')
-        if os.getenv('OPENAI_API_KEY'):  # 일반적인 환경변수명도 지원
-            config['api_key'] = os.getenv('OPENAI_API_KEY')
+        if os.getenv('api_key'):
+            config['api_key'] = os.getenv('api_key')
             
         # Base URL
-        if os.getenv('BASE_URL'):
-            config['base_url'] = os.getenv('BASE_URL')
-        if os.getenv('OPENAI_BASE_URL'):
-            config['base_url'] = os.getenv('OPENAI_BASE_URL')
-        if os.getenv('API_BASE'):
-            config['api_base'] = os.getenv('API_BASE')
+        if os.getenv('api_base'):
+            config['api_base'] = os.getenv('api_base')
+            config['base_url'] = os.getenv('api_base')
             
-        return config
-    
-    def _override_with_streamlit_secrets(self, config: Dict) -> Dict:
-        """Streamlit secrets로 설정 오버라이드"""
-        if not STREAMLIT_AVAILABLE:
-            return config
-            
-        try:
-            # API 키
-            if hasattr(st, 'secrets') and 'general' in st.secrets:
-                if 'API_KEY' in st.secrets.general:
-                    config['api_key'] = st.secrets.general['API_KEY']
-                if 'BASE_URL' in st.secrets.general:
-                    config['base_url'] = st.secrets.general['BASE_URL']
-                    
-            # 모델 설정
-            if hasattr(st, 'secrets') and 'pwc_model' in st.secrets:
-                config['pwc_model'] = dict(st.secrets.pwc_model)
-                
-        except Exception as e:
-            logging.warning(f"Streamlit secrets 읽기 실패: {e}")
+        # PWC 모델 설정 (JSON 문자열)
+        if os.getenv('pwc_model'):
+            try:
+                import json
+                config['pwc_model'] = json.loads(os.getenv('pwc_model'))
+                logging.info(f"환경변수에서 pwc_model 로드 완료")
+            except json.JSONDecodeError as e:
+                logging.warning(f"pwc_model 환경변수 JSON 파싱 실패: {e}")
             
         return config
     
@@ -92,14 +64,12 @@ class ModelConfig:
         }
     
     def get_api_key(self) -> str:
-        """통합 API 키 반환"""
-        return self.config.get('api_key', '')
+        """API 키 반환"""
+        return os.getenv('api_key') or self.config.get('api_key', '')
     
     def get_base_url(self) -> str:
-        """Base URL 반환 (환경변수에서 우선 확인)"""
-        # api_base 또는 base_url 키 모두 지원
-        base_url = self.config.get('api_base') or self.config.get('base_url')
-        return os.getenv('BASE_URL', base_url or 'https://api.openai.com/v1')
+        """Base URL 반환"""
+        return os.getenv('api_base') or self.config.get('api_base') or self.config.get('base_url', 'https://api.openai.com/v1')
     
     def get_actual_model(self, user_model: str) -> str:
         """사용자 모델명을 실제 모델명으로 변환"""
@@ -146,7 +116,13 @@ class ModelConfig:
             'models_in_config': list(model_mapping.keys()),
             'available_models_count': len(available_models),
             'available_models': list(available_models.keys()),
-            'available_models_with_descriptions': available_models
+            'azure_env_vars': {
+                'api_key': bool(os.getenv('api_key')),
+                'api_base': bool(os.getenv('api_base')),
+                'pwc_model': bool(os.getenv('pwc_model'))
+            },
+            'current_api_key_set': bool(self.get_api_key()),
+            'current_base_url': self.get_base_url()
         }
 
 # 전역 설정 인스턴스
