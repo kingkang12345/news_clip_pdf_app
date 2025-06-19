@@ -53,7 +53,8 @@ class ModelConfig:
             "claude3_5_v2": "Claude 3.5 Sonnet v2",
             "openai_o3_mini": "OpenAI o3-mini (최신)",
             "gemini_2.0_flash": "Gemini 2.0 Flash",
-            "claude3_7": "Claude 3.7 Sonnet"
+            "claude3_7": "Claude 3.7 Sonnet",
+            "openai_ai": "gpt-4o-mini"
         }
         
         return {k: v for k, v in model_descriptions.items() if k in model_mapping}
